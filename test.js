@@ -1,4 +1,5 @@
 import pkg from 'windwardrestapi';
+import fs from "fs";
 const {WindwardClient, Template, Xml_10DataSource, OutputFormatEnum} = pkg;
 
 
@@ -9,7 +10,7 @@ function sleep(ms) {
 async function main()
 {
     //Create a new instance of the client
-    let client = new WindwardClient.WindwardClient("http://localhost:64228/");
+    let client = new WindwardClient.WindwardClient("http://ec2-54-88-67-209.compute-1.amazonaws.com/");
     
     //Get the verrsion information
     let version = await client.getVersionInfo();
@@ -19,9 +20,8 @@ async function main()
     const dsFilePath = './files/Manufacturing.xml';
 
     //Create new Xml_10DataSource object and pass in the datasource name, and the data file path.
-    let testXmlDS = new Xml_10DataSource('InvestmentFactSheet', undefined, dsFilePath, undefined);
-    console.log("DS:\n", testXmlDS);
-
+    let testXmlDS = new Xml_10DataSource('MANF_DATA_2009', undefined, dsFilePath, undefined);
+ 
     //The template file I wish to process.
     const filePath = './files/Manufacturing.docx';
 
@@ -29,7 +29,6 @@ async function main()
     let testTemplate = new Template(OutputFormatEnum.DOCX, [testXmlDS],undefined, filePath,
         undefined, undefined, undefined, undefined, undefined, undefined,
         undefined, undefined, undefined, undefined, undefined, undefined);
-    console.log("FINAL TEMPLATE OBJECT: ", testTemplate);
     
     //Post document to the engine for processing
     let testPostDocument = await client.postDocument(testTemplate);
@@ -51,7 +50,6 @@ async function main()
     }
     //get the processed template 
     let testGetDocument  = await client.getDocument(testPostDocument.Guid);
-    console.log('FINAL DOCUMENT OBJECT: \n', testGetDocument);
 
     //post the template metrics for processing. Pass in the template object.
     let testPostMetrics = await client.postMetrics(testTemplate);
@@ -72,7 +70,6 @@ async function main()
     }
     //Get the processed template metrics
     let testGetMetrics = await client.getMetrics(testPostMetrics.Guid);
-    console.log("METRICS: \n", testGetMetrics);
 
     //Post the template tagtree for processing. Takes in template object.
     let testPostTagTree = await client.postTagTree(testTemplate);
@@ -94,16 +91,17 @@ async function main()
     }
     //Get the processed template tag tree.
     let testGetTagTree = await client.getTagTree(testPostTagTree.Guid);
-    console.log("FINAL TAGTREE: \n", testGetTagTree);
 
+    fs.writeFile("./files/output.docx", new Buffer.from(testGetDocument.Data, "base64"), function(err){});
+    console.log("Wrote output to -> ./files/output.docx\n");
     //Delete the processed document
-    let testDeleteDocument = await client.deleteDocument(testPostDocument.Guid);
+    let testDeleteDocument = await client.deleteDocument(testGetDocument.Guid);
     console.log("DOCUMENT DELETED CODE: ", testDeleteDocument, '\n');
     //Delete the processed metrics
-    let testDeleteMetrics = await client.deleteMetrics(testPostMetrics.Guid);
+    let testDeleteMetrics = await client.deleteMetrics(testGetMetrics.Guid);
     console.log("METRICS DELETED CODE: ", testDeleteMetrics, '\n');
     //Delete the processed tag tree.
-    let testDeleteTagTree = await client.deleteTagTree(testPostTagTree.Guid);
+    let testDeleteTagTree = await client.deleteTagTree(testGetTagTree.Guid);
     console.log("TAGTREE DELETED CODE: ", testDeleteTagTree, '\n');
 }
 main();
