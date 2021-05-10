@@ -5,7 +5,7 @@
   "main": "test.js",
   "type": "module",
   "dependencies": {
-    "windwardrestapi": "21.0.20"
+    "windwardrestapi": "21.0.22"
   },
   "devDependencies": {},
   "scripts": {
